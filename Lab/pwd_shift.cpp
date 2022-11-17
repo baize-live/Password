@@ -1,7 +1,5 @@
 #include "password.h"
 
-using namespace std;
-
 void encrypt_shift(byte *clear, int len, int shift_num) {
     shift_num %= 26;
     for (int i = 0; i < len; i++) {
@@ -54,7 +52,7 @@ string decrypt_shift(const string &cipher, int shift_num) {
 
 void attack_shift(const string &cipher) {
     byte *bytes = new byte[cipher.size()];
-    printf("start attack shift password\n");
+    printf("start attack shift password:\n");
     for (int shift_num = 0; shift_num < 26; ++shift_num) {
         printf("shift: %02d, decrypt result: ", shift_num);
         for (int i = 0; i < cipher.size(); i++) {

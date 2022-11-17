@@ -2,18 +2,27 @@
 #define LAB1_PASSWORD_H
 
 #include <string>
+#include <map>
+
+using namespace std;
 
 typedef unsigned char byte;
 
 // 移位密码
-void encrypt_shift(byte *clear, int len, int shift_num);
+string encrypt_shift(const string &clear, int shift_num);
 
-void decrypt_shift(byte *cipher, int len, int shift_num);
+string decrypt_shift(const string &cipher, int shift_num);
 
-std::string encrypt_shift(const std::string &clear, int shift_num);
+void attack_shift(const string &cipher);
 
-std::string decrypt_shift(const std::string &cipher, int shift_num);
+// 单表置换密码
+// 生成置换表
+void generate_replace_table(const string &key = "For you, a thousand times over. zzz");
 
-void attack_shift(const std::string &cipher);
+string encrypt_singleTableReplace(const string &key, const string &clear);
+
+string decrypt_singleTableReplace(const string &key, const string &cipher);
+
+string frequency_attack(const string &cipher);
 
 #endif //LAB1_PASSWORD_H
