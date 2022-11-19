@@ -2,11 +2,14 @@
 #define LAB1_PASSWORD_H
 
 #include <string>
+#include <Cstring>
 #include <map>
 
 using namespace std;
 
-typedef unsigned char byte;
+typedef unsigned char UINT_8;
+typedef unsigned int UINT_32;
+typedef unsigned long long int UINT_64;
 
 // “∆Œª√‹¬Î
 string encrypt_shift(const string &clear, int shift_num);

@@ -158,6 +158,3 @@ string frequency_attack(const string &cipher) {
 
     return clear;
 }
-
-
-
