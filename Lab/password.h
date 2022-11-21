@@ -28,4 +28,9 @@ string decrypt_singleTableReplace(const string &key, const string &cipher);
 
 string frequency_attack(const string &cipher);
 
+// DES√‹¬Î
+void encrypt_des(UINT_8 *clear, UINT_8 *cipher, int len, UINT_64 key_64);
+
+void decrypt_des(UINT_8 *cipher, UINT_8 *clear, int len, UINT_64 key_64);
+
 #endif //LAB1_PASSWORD_H
