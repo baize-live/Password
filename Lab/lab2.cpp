@@ -69,7 +69,7 @@ des_test_case cases[] = {
                 {0xD9, 0x03, 0x1B, 0x02, 0x71, 0xBD, 0x5A, 0x0A}}
 };
 
-int main() {
+int verifyCase() {
     UINT_8 bits[8];
     UINT_64 key = 0;
 
@@ -95,5 +95,75 @@ int main() {
         }
         printf("out: %d\n", flag);
     }
+    return 0;
 }
 
+int detectionAvalanche() {
+    UINT_8 bits[8];
+    UINT_8 bits_1[8];
+    UINT_8 bits_2[8];
+    UINT_64 key = 0;
+    int len = 0;
+    memcpy(&key, cases[len].key, 8);
+    memcpy(&bits, cases[len].txt, 8);
+    encrypt_des(cases[len].txt, bits_1, sizeof(bits_1), key);
+
+    printf("====================================\n");
+
+    // 固定密钥 修改明文中的一位
+    int sum = 0;
+    for (UINT_8 i = 0; i < 8; ++i) {
+        memcpy(&bits, cases[len].txt, 8);
+        // 修改第1位
+        bits[i] = bits[i] ^ 0x80;
+        // 加密
+        encrypt_des(bits, bits_2, sizeof(bits_2), key);
+        // 比较不同的位数
+        int num = 0;
+        for (int j = 0; j < sizeof(bits); ++j) {
+            int temp = bits_1[j] ^ bits_2[j];
+            for (int k = 0; k < sizeof(UINT_8); ++k) {
+                if ((temp >> 1) & 0x1) {
+                    num++;
+                }
+            }
+        }
+        printf("%d. 固定密钥, 修改一位明文, 密文改变%d位\n", i + 1, num);
+        sum += num;
+    }
+    printf("固定密钥, 修改一位明文, 密文平均改变%d位\n", sum / 8);
+
+    printf("====================================\n");
+
+    // 固定明文 修改明文中的一位
+    sum = 0;
+    for (UINT_8 i = 0; i < 8; ++i) {
+        // 修改key第1位
+        memcpy(&bits, cases[len].key, 8);
+        bits[i] = bits[i] ^ 0x80;
+        memcpy(&key, bits, 8);
+        // 加密
+        encrypt_des(cases[len].txt, bits_2, sizeof(bits_2), key);
+        // 比较不同的位数
+        int num = 0;
+        for (int j = 0; j < sizeof(bits); ++j) {
+            int temp = bits_1[j] ^ bits_2[j];
+            for (int k = 0; k < sizeof(UINT_8); ++k) {
+                if ((temp >> 1) & 0x1) {
+                    num++;
+                }
+            }
+        }
+        printf("%d. 固定密文, 修改一位密钥, 密文改变%d位\n", i + 1, num);
+        sum += num;
+    }
+    printf("固定密文, 修改一位密钥, 密文平均改变%d位\n", sum / 8);
+
+    return 0;
+}
+
+int main() {
+    verifyCase();
+    detectionAvalanche();
+    system("pause");
+}
