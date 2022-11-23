@@ -2,6 +2,7 @@
 #define LAB1_PASSWORD_H
 
 #include <string>
+#include <vector>
 #include <Cstring>
 #include <map>
 
@@ -33,4 +34,8 @@ void encrypt_des(UINT_8 *clear, UINT_8 *cipher, int len, UINT_64 key_64);
 
 void decrypt_des(UINT_8 *cipher, UINT_8 *clear, int len, UINT_64 key_64);
 
+// AES密码 密钥长度可以为 128 192 256
+void encrypt_aes(UINT_8 *clear, UINT_8 *cipher, int len, UINT_8 *key, int key_len);
+
+void decrypt_aes(UINT_8 *cipher, UINT_8 *clear, int len, UINT_8 *key, int key_len);
 #endif //LAB1_PASSWORD_H
