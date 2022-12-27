@@ -3,8 +3,9 @@
 
 #include <string>
 #include <vector>
-#include <Cstring>
+#include <cstring>
 #include <map>
+#include "BigInt.h"
 
 using namespace std;
 
@@ -38,4 +39,15 @@ void decrypt_des(UINT_8 *cipher, UINT_8 *clear, int len, UINT_64 key_64);
 void encrypt_aes(UINT_8 *clear, UINT_8 *cipher, int len, UINT_8 *key, int key_len);
 
 void decrypt_aes(UINT_8 *cipher, UINT_8 *clear, int len, UINT_8 *key, int key_len);
+
+// RSA√‹¬Î
+void generate_Key();
+
+BigInt encrypt_rsa(const BigInt &clear, const pair<BigInt, BigInt> &pub_key);
+
+BigInt decrypt_rsa(const BigInt &cipher, const pair<BigInt, BigInt> &pri_key);
+
+// MD5 hash
+void MD5(UINT_8 *clear, UINT_8 *cipher, int len);
+
 #endif //LAB1_PASSWORD_H
