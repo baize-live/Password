@@ -195,50 +195,150 @@ void extend_key(UINT_8 *key, UINT_32 *key_extend) {
     }
 }
 
-void handle_byte(UINT_8 *before_handle, UINT_8 *after_handle, int len, UINT_8 *key, int key_len, bool isEncrypt) {
-    // 补全16bytes
-    int len_bytes = (len + handle_bytes_len - 1) & ~(handle_bytes_len - 1);
-    auto *bytes = new UINT_8[len_bytes];
-    memcpy(bytes, before_handle, len);
-    memset(bytes + len, 0, len_bytes - len);
-
+void handle_byte(UINT_8 *bytes, int len, UINT_8 *key, int key_len, bool isEncrypt) {
     Nb = handle_bytes_len / 4;
     Nk = key_len / 32;
     Nr = Nk_map_Nr[Nk];
 
     // 生成拓展密钥
-    auto *key_extend = new UINT_32[Nb * (Nr + 1)];
-    extend_key(key, key_extend);
+    auto *key_extend_init = new UINT_32[Nb * (Nr + 1)];
+    auto *key_extend_temp = new UINT_32[Nb * (Nr + 1)];
+    extend_key(key, key_extend_init);
 
-    // 开始分组处理
-    auto *temp = new UINT_8[handle_bytes_len];
-
-    for (int i = 0; i < len_bytes; i += handle_bytes_len) {
+    for (int i = 0; i < len; i += handle_bytes_len) {
         // 现在开始处理 这handle_bytes_len个字节
-        auto *now_handle = bytes + handle_bytes_len * i;
-        memcpy(temp, now_handle, handle_bytes_len);
-
+        auto *now_handle = bytes + i;
+        memcpy(key_extend_temp, key_extend_init, sizeof(UINT_32) * Nb * (Nr + 1));
         // 轮函数
-        for (int j = 0; j < Nr + 1; ++j) {
-            if (isEncrypt) {
-                round_encrypt(now_handle, key_extend + Nb * j, j);
-            } else {
-                round_decrypt(now_handle, key_extend + Nb * (Nr - j), Nr - j);
+        if (isEncrypt) {
+            for (int j = 0; j < Nr + 1; ++j) {
+                round_encrypt(now_handle, key_extend_temp + Nb * j, j);
+            }
+        } else {
+            for (int j = 0; j < Nr + 1; ++j) {
+                round_decrypt(now_handle, key_extend_temp + Nb * (Nr - j), Nr - j);
             }
         }
+
     }
-    memcpy(after_handle, bytes, len);
-    delete[] temp;
-    delete[] bytes;
-    delete[] key_extend;
+    delete[] key_extend_init;
+    delete[] key_extend_temp;
 }
 
 void encrypt_aes(UINT_8 *clear, UINT_8 *cipher, int len, UINT_8 *key, int key_len) {
-    handle_byte(clear, cipher, len, key, key_len, true);
+    int new_len = (len + handle_bytes_len - 1) & ~(handle_bytes_len - 1);
+    auto bytes = new UINT_8[new_len];
+    memcpy(bytes, clear, len);
+    memset(bytes + len, 0, new_len - len);
+    handle_byte(bytes, new_len, key, key_len, true);
+    memcpy(cipher, bytes, new_len);
+    delete[] bytes;
 }
 
 void decrypt_aes(UINT_8 *cipher, UINT_8 *clear, int len, UINT_8 *key, int key_len) {
-    handle_byte(cipher, clear, len, key, key_len, false);
+    int new_len = (len + handle_bytes_len - 1) & ~(handle_bytes_len - 1);
+    auto bytes = new UINT_8[new_len];
+    memcpy(bytes, cipher, len);
+    memset(bytes + len, 0, new_len - len);
+    handle_byte(bytes, new_len, key, key_len, false);
+    memcpy(clear, bytes, new_len);
+    delete[] bytes;
+}
+
+void handle_byte_cbc(UINT_8 *bytes, int len, UINT_8 *key, UINT_8 *iv, int key_len, bool isEncrypt) {
+    Nb = handle_bytes_len / 4;
+    Nk = key_len / 32;
+    Nr = Nk_map_Nr[Nk];
+
+    // 生成拓展密钥
+    auto *key_extend_init = new UINT_32[Nb * (Nr + 1)];
+    auto *key_extend_temp = new UINT_32[Nb * (Nr + 1)];
+    extend_key(key, key_extend_init);
+
+    // 加密
+    if (isEncrypt) {
+        // 拷贝iv
+        auto temp = new UINT_8[handle_bytes_len];
+        memcpy(temp, iv, handle_bytes_len);
+
+        // 开始分组处理
+        for (int i = 0; i < len; i += handle_bytes_len) {
+            // 现在开始处理 这handle_bytes_len个字节
+            auto *now_handle = bytes + i;
+            // 拷贝密钥
+            memcpy(key_extend_temp, key_extend_init, sizeof(UINT_32) * Nb * (Nr + 1));
+            // 异或处理
+            for (int j = 0; j < handle_bytes_len; j++) {
+                now_handle[j] ^= temp[j];
+            }
+            // 轮函数
+            for (int j = 0; j < Nr + 1; ++j) {
+                round_encrypt(now_handle, key_extend_temp + Nb * j, j);
+            }
+            // 更新向量
+            memcpy(temp, now_handle, handle_bytes_len);
+        }
+        delete[] temp;
+    }
+
+    // 解密
+    if (!isEncrypt) {
+        // 拷贝iv
+        auto *temp1 = new UINT_8[handle_bytes_len];
+        auto *temp2 = new UINT_8[handle_bytes_len];
+        memcpy(temp2, iv, handle_bytes_len);
+
+        // 开始分组处理
+        for (int i = 0; i < len; i += handle_bytes_len) {
+            // 现在开始处理 这handle_bytes_len个字节
+            auto *now_handle = bytes + i;
+            // 拷贝密钥
+            memcpy(key_extend_temp, key_extend_init, sizeof(UINT_32) * Nb * (Nr + 1));
+            // 保存上一组的密文
+            memcpy(temp1, now_handle, handle_bytes_len);
+            // 轮函数
+            for (int j = 0; j < Nr + 1; ++j) {
+                round_decrypt(now_handle, key_extend_temp + Nb * (Nr - j), Nr - j);
+            }
+            // 异或处理
+            for (int j = 0; j < handle_bytes_len; j++) {
+                now_handle[j] ^= temp2[j];
+            }
+            // 更新向量
+            memcpy(temp2, temp1, handle_bytes_len);
+        }
+        delete[] temp1;
+        delete[] temp2;
+    }
+
+    // 释放内存
+    delete[] key_extend_init;
+    delete[] key_extend_temp;
+}
+
+void encrypt_aes_cbc(const string &clear, string &cipher, UINT_8 *key, UINT_8 *iv, int key_len) {
+    int len = (clear.length() + handle_bytes_len - 1) & ~(handle_bytes_len - 1);
+    auto bytes = new UINT_8[len];
+    copy(clear.begin(), clear.end(), bytes);
+    memset(bytes + clear.length(), 0, len - clear.length());
+    handle_byte_cbc(bytes, len, key, iv, key_len, true);
+    cipher.resize(len);
+    copy(bytes, bytes + len, cipher.begin());
+    delete[] bytes;
+}
+
+void decrypt_aes_cbc(const string &cipher, string &clear, UINT_8 *key, UINT_8 *iv, int key_len) {
+    int len = cipher.length();
+    auto bytes = new UINT_8[len];
+    copy(cipher.begin(), cipher.end(), bytes);
+    handle_byte_cbc(bytes, len, key, iv, key_len, false);
+    clear.resize(len);
+    copy(bytes, bytes + len, clear.begin());
+    // 去除填充0
+    while (clear.back() == 0) {
+        clear.pop_back();
+    }
+    delete[] bytes;
 }
 
 map<int, int> Nk_map_Nr{

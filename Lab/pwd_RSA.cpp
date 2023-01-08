@@ -105,19 +105,15 @@ BigInt generate_BigPrime(int len) {
 }
 
 // 生成密钥对
-void generate_Key() {
+void generate_RSA_KEY(BigInt &e, BigInt &d, BigInt &n) {
     BigInt p = generate_BigPrime(512);
     BigInt q = generate_BigPrime(512);
 
-    BigInt n = p * q;
+    n = p * q;
     BigInt eul = (p - 1) * (q - 1);
 
-    BigInt e = 65537;
-    BigInt d = e.modInv(eul);
-
-    std::cout << e << std::endl;
-    std::cout << d << std::endl;
-    std::cout << n << std::endl;
+    e = 65537;
+    d = e.modInv(eul);
 }
 
 // 公钥加密

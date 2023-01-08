@@ -40,8 +40,12 @@ void encrypt_aes(UINT_8 *clear, UINT_8 *cipher, int len, UINT_8 *key, int key_le
 
 void decrypt_aes(UINT_8 *cipher, UINT_8 *clear, int len, UINT_8 *key, int key_len);
 
+void encrypt_aes_cbc(const string &clear, string &cipher, UINT_8 *key, UINT_8 *iv, int key_len);
+
+void decrypt_aes_cbc(const string &cipher, string &clear, UINT_8 *key, UINT_8 *iv, int key_len);
+
 // RSA√‹¬Î
-void generate_Key();
+void generate_RSA_KEY(BigInt &e, BigInt &d, BigInt &n);
 
 BigInt encrypt_rsa(const BigInt &clear, const pair<BigInt, BigInt> &pub_key);
 
