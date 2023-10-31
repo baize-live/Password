@@ -11,6 +11,7 @@ add_executable(Lab5 lab5.cpp password.h hash_MD5.cpp)
 add_executable(Lab_Final_Server cca/lab_final_server.cpp password.h cca/CCA.h cca/TCP.h utils/FileUtil.h utils/FileUtil.cpp pwd_AES.cpp pwd_RSA.cpp BigInt.cpp BigInt.h)
 add_executable(Lab_Final_Client cca/lab_final_client.cpp password.h cca/CCA.h cca/TCP.h utils/FileUtil.h utils/FileUtil.cpp pwd_AES.cpp pwd_RSA.cpp BigInt.cpp BigInt.h)
 add_executable(Test test.cpp BigInt.cpp BigInt.h password.h pwd_RSA.cpp utils/FileUtil.h utils/FileUtil.cpp pwd_AES.cpp)
+add_executable(SPN pwd_SPN.cpp)
 
 target_link_libraries(Lab_Final_Server ws2_32)
 target_link_libraries(Lab_Final_Client ws2_32)
